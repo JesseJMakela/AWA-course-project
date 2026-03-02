@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { documentAPI } from '../api/client';
+import { documentAPI, getApiError } from '../api/client';
 
 interface Document {
   _id: string;
@@ -27,8 +27,8 @@ const PublicDocument: React.FC = () => {
     try {
       const response = await documentAPI.getByPublicLink(link!);
       setDocument(response.data.document);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Document not found');
+    } catch (err: unknown) {
+      setError(getApiError(err, 'Document not found'));
     } finally {
       setLoading(false);
     }

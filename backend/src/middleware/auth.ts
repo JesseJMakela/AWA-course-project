@@ -57,7 +57,7 @@ export const optionalAuth = (req: AuthRequest, res: Response, next: NextFunction
       }
     }
     next();
-  } catch (error) {
+  } catch {
     // Silently continue without authentication
     next();
   }

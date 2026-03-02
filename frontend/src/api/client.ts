@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { isAxiosError } from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
@@ -86,3 +86,20 @@ export const fileAPI = {
 };
 
 export default api;
+
+// Typed API error response shapes
+interface ValidationError { msg: string }
+interface ApiErrorResponse {
+  error?: string;
+  errors?: ValidationError[];
+}
+
+/** Extract a human-readable message from an unknown catch value */
+export function getApiError(err: unknown, fallback = 'An error occurred'): string {
+  if (isAxiosError(err)) {
+    const data = err.response?.data as ApiErrorResponse | undefined;
+    if (data?.errors?.length) return data.errors.map(e => e.msg).join(' · ');
+    return data?.error ?? fallback;
+  }
+  return fallback;
+}

@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { registerValidation, loginValidation, validate } from '../validators/validation.js';
+import { authenticateUser, AuthRequest } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -110,35 +111,15 @@ router.post('/login', loginValidation, validate, async (req: Request, res: Respo
 });
 
 // GET /api/auth/me - Get current user info
-router.get('/me', async (req: Request, res: Response) => {
+router.get('/me', authenticateUser, async (req: AuthRequest, res: Response) => {
   try {
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Authentication required' });
-    }
-
-    const token = authHeader.substring(7);
-    const secret = process.env.SECRET;
-
-    if (!secret) {
-      return res.status(500).json({ error: 'Server configuration error' });
-    }
-
-    const decoded = jwt.verify(token, secret) as {
-      _id: string;
-      username: string;
-      email: string;
-    };
-
-    const user = await User.findById(decoded._id).select('-password');
+    const user = await User.findById(req.user!._id).select('-password');
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-
-    res.json({ user: { ...user.toObject(), password: undefined } });
+    res.json({ user });
   } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
+    res.status(500).json({ error: 'Failed to fetch user' });
   }
 });
 

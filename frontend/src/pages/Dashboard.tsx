@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { documentAPI, fileAPI } from '../api/client';
+import { documentAPI, fileAPI, getApiError } from '../api/client';
 
 interface DocumentItem {
   _id: string;
@@ -81,8 +81,8 @@ const Dashboard: React.FC = () => {
       setNewDocTitle('');
       setShowNewDocModal(false);
       fetchDocuments();
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to create document');
+    } catch (err: unknown) {
+      setError(getApiError(err, 'Failed to create document'));
     }
   };
 
@@ -91,8 +91,8 @@ const Dashboard: React.FC = () => {
     try {
       await documentAPI.delete(id);
       fetchDocuments();
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to delete document');
+    } catch (err: unknown) {
+      setError(getApiError(err, 'Failed to delete document'));
     }
   };
 
@@ -104,8 +104,8 @@ const Dashboard: React.FC = () => {
     try {
       await fileAPI.uploadImage(file);
       await fetchImages();
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to upload image');
+    } catch (err: unknown) {
+      setError(getApiError(err, 'Failed to upload image'));
     } finally {
       setUploading(false);
       if (imageInputRef.current) imageInputRef.current.value = '';
@@ -118,8 +118,8 @@ const Dashboard: React.FC = () => {
       await fileAPI.deleteImage(id);
       setImages(prev => prev.filter(img => img._id !== id));
       if (previewImage?._id === id) setPreviewImage(null);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to delete image');
+    } catch (err: unknown) {
+      setError(getApiError(err, 'Failed to delete image'));
     }
   };
 
@@ -131,8 +131,8 @@ const Dashboard: React.FC = () => {
       await fileAPI.uploadAvatar(file);
       await refreshUser();
       setShowAvatarModal(false);
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to upload avatar');
+    } catch (err: unknown) {
+      setError(getApiError(err, 'Failed to upload avatar'));
     } finally {
       setAvatarUploading(false);
       if (avatarInputRef.current) avatarInputRef.current.value = '';

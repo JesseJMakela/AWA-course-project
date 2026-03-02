@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getApiError } from '../api/client';
 
 const Register: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -19,13 +20,8 @@ const Register: React.FC = () => {
     try {
       await register(email, password, username);
       navigate('/dashboard');
-    } catch (err: any) {
-      const data = err.response?.data;
-      if (data?.errors && Array.isArray(data.errors)) {
-        setError(data.errors.map((e: any) => e.msg).join(' · '));
-      } else {
-        setError(data?.error || 'Registration failed');
-      }
+    } catch (err: unknown) {
+      setError(getApiError(err, 'Registration failed'));
     } finally {
       setLoading(false);
     }

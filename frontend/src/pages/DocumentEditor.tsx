@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { isAxiosError } from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { documentAPI } from '../api/client';
+import { documentAPI, getApiError } from '../api/client';
 
 interface Document {
   _id: string;
@@ -45,13 +46,10 @@ const DocumentEditor: React.FC = () => {
   useEffect(() => {
     // Auto-save every 10 seconds if editing
     if (isEditing && document?.canEdit) {
-      const interval = setInterval(() => {
-        handleSave();
-      }, 10000);
-
+      const interval = setInterval(handleSave, 10000);
       return () => clearInterval(interval);
     }
-  }, [isEditing, title, content, document]);
+  }, [isEditing, document, title, content]);
 
   // Warn before closing if editing
   useEffect(() => {
@@ -82,8 +80,8 @@ const DocumentEditor: React.FC = () => {
           new Date(doc.editLockExpiry) > new Date()) {
         setLockWarning(`This document is currently being edited by ${doc.currentlyEditingBy.username}`);
       }
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to load document');
+    } catch (err: unknown) {
+      setError(getApiError(err, 'Failed to load document'));
     } finally {
       setLoading(false);
     }
@@ -96,10 +94,10 @@ const DocumentEditor: React.FC = () => {
       await documentAPI.lock(id!);
       setIsEditing(true);
       setLockWarning('');
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to start editing');
-      if (err.response?.data?.editedBy) {
-        setLockWarning(`Document is being edited by ${err.response.data.editedBy}`);
+    } catch (err: unknown) {
+      setError(getApiError(err, 'Failed to start editing'));
+      if (isAxiosError(err) && err.response?.data?.editedBy) {
+        setLockWarning(`Document is being edited by ${err.response.data.editedBy as string}`);
       }
     }
   };
@@ -111,7 +109,7 @@ const DocumentEditor: React.FC = () => {
       await handleSave();
       await documentAPI.unlock(id!);
       setIsEditing(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to stop editing:', err);
     }
   };
@@ -122,8 +120,8 @@ const DocumentEditor: React.FC = () => {
     setSaving(true);
     try {
       await documentAPI.update(id!, { title, content });
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to save document');
+    } catch (err: unknown) {
+      setError(getApiError(err, 'Failed to save document'));
     } finally {
       setSaving(false);
     }
@@ -138,8 +136,8 @@ const DocumentEditor: React.FC = () => {
       setShareEmail('');
       setShowShareModal(false);
       fetchDocument();
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to share document');
+    } catch (err: unknown) {
+      setError(getApiError(err, 'Failed to share document'));
     }
   };
 
@@ -147,8 +145,8 @@ const DocumentEditor: React.FC = () => {
     try {
       await documentAPI.removePermission(id!, userId);
       fetchDocument();
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to remove permission');
+    } catch (err: unknown) {
+      setError(getApiError(err, 'Failed to remove permission'));
     }
   };
 
@@ -157,8 +155,8 @@ const DocumentEditor: React.FC = () => {
       const response = await documentAPI.generatePublicLink(id!);
       setPublicLink(response.data.publicLink);
       fetchDocument();
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to generate public link');
+    } catch (err: unknown) {
+      setError(getApiError(err, 'Failed to generate public link'));
     }
   };
 
@@ -167,8 +165,8 @@ const DocumentEditor: React.FC = () => {
       await documentAPI.removePublicLink(id!);
       setPublicLink('');
       fetchDocument();
-    } catch (err: any) {
-      setError(err.response?.data?.error || 'Failed to remove public link');
+    } catch (err: unknown) {
+      setError(getApiError(err, 'Failed to remove public link'));
     }
   };
 

@@ -86,9 +86,10 @@ router.post('/images', authenticateUser, imageUpload.single('image'), async (req
         createdAt: driveImage.createdAt
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Image upload error:', error);
-    res.status(500).json({ error: error.message || 'Failed to upload image' });
+    const message = error instanceof Error ? error.message : 'Failed to upload image';
+    res.status(500).json({ error: message });
   }
 });
 
@@ -147,9 +148,10 @@ router.post('/avatar', authenticateUser, avatarUpload.single('avatar'), async (r
     await user.save();
 
     res.json({ message: 'Avatar updated', avatar: user.avatar });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Avatar upload error:', error);
-    res.status(500).json({ error: error.message || 'Failed to upload avatar' });
+    const message = error instanceof Error ? error.message : 'Failed to upload avatar';
+    res.status(500).json({ error: message });
   }
 });
 
