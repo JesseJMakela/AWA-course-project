@@ -2,9 +2,9 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IUser extends Document {
   email: string;
-  password: string;
+  password: string; // stored as bcrypt hash
   username: string;
-  avatar?: string;
+  avatar?: string;  // relative URL to uploaded profile picture
   createdAt: Date;
   updatedAt: Date;
 }

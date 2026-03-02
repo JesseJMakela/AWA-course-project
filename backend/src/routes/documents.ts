@@ -1,3 +1,8 @@
+// Document CRUD, locking, sharing, and public-link routes.
+//
+// Locking: POST /:id/lock grants a 10-minute exclusive edit lock.
+// The lock expires automatically, so closing a tab never permanently blocks
+// other users. POST /:id/unlock releases it early.
 import express, { Response } from 'express';
 import crypto from 'crypto';
 import { Types } from 'mongoose';

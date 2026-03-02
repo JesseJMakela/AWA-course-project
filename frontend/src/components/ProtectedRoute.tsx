@@ -6,6 +6,7 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
+// Redirects unauthenticated users to /login; shows a loader while auth state is resolving
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
 

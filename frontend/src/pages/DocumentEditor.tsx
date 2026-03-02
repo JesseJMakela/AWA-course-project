@@ -1,3 +1,8 @@
+// Document editor with optimistic locking:
+// - clicking Edit acquires a server-side lock (10 min expiry)
+// - lock expires automatically so a closed tab never permanently blocks others
+// - auto-saves every 10 seconds while editing
+// - beforeunload warns the user if there are unsaved changes
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { isAxiosError } from 'axios';
@@ -44,7 +49,8 @@ const DocumentEditor: React.FC = () => {
   }, [id]);
 
   useEffect(() => {
-    // Auto-save every 10 seconds if editing
+    // Set up a 10-second auto-save interval while the user is in editing mode.
+    // The interval is cleared when editing stops or when the component unmounts.
     if (isEditing && document?.canEdit) {
       const interval = setInterval(handleSave, 10000);
       return () => clearInterval(interval);
@@ -53,6 +59,12 @@ const DocumentEditor: React.FC = () => {
 
   // Warn before closing if editing
   useEffect(() => {
+    /**
+     * beforeunload handler: if the user tries to close or navigate away while
+     * still in editing mode, the browser shows a confirmation dialog.
+     * This reduces accidental data loss for users who close the tab without
+     * clicking "Done Editing" (the lock will expire on the server after 10 min).
+     */
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isEditing) {
         e.preventDefault();
@@ -64,6 +76,7 @@ const DocumentEditor: React.FC = () => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [isEditing]);
 
+  /** Fetch the document from the API and populate local state. */
   const fetchDocument = async () => {
     try {
       const response = await documentAPI.getById(id!);
@@ -87,6 +100,13 @@ const DocumentEditor: React.FC = () => {
     }
   };
 
+  /**
+   * Acquire the edit lock and switch the UI into editing mode.
+   *
+   * Calls POST /api/documents/:id/lock.  The server grants a 10-minute lock.
+   * If another user already holds an unexpired lock, the API returns 423 and
+   * the username of the current editor is shown as a warning.
+   */
   const handleStartEditing = async () => {
     if (!document?.canEdit) return;
 
@@ -102,6 +122,10 @@ const DocumentEditor: React.FC = () => {
     }
   };
 
+  /**
+   * Save the current content and release the edit lock.
+   * Called when the user clicks "Done Editing".
+   */
   const handleStopEditing = async () => {
     if (!isEditing) return;
 
@@ -114,6 +138,7 @@ const DocumentEditor: React.FC = () => {
     }
   };
 
+  /** Save the current title and content to the server (PUT /api/documents/:id). */
   const handleSave = async () => {
     if (!document?.canEdit || saving) return;
 
@@ -127,6 +152,11 @@ const DocumentEditor: React.FC = () => {
     }
   };
 
+  /**
+   * Share the document with a user by e-mail.
+   * The selected permission ('edit' or 'view') is sent to
+   * POST /api/documents/:id/share.
+   */
   const handleShare = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!shareEmail.trim()) return;
@@ -141,6 +171,7 @@ const DocumentEditor: React.FC = () => {
     }
   };
 
+  /** Remove all access for a specific user from this document. */
   const handleRemovePermission = async (userId: string) => {
     try {
       await documentAPI.removePermission(id!, userId);
@@ -150,6 +181,7 @@ const DocumentEditor: React.FC = () => {
     }
   };
 
+  /** Generate a random public link so the document can be read without logging in. */
   const handleGeneratePublicLink = async () => {
     try {
       const response = await documentAPI.generatePublicLink(id!);
@@ -160,6 +192,7 @@ const DocumentEditor: React.FC = () => {
     }
   };
 
+  /** Disable public access and delete the public link stored on the document. */
   const handleRemovePublicLink = async () => {
     try {
       await documentAPI.removePublicLink(id!);
@@ -170,6 +203,7 @@ const DocumentEditor: React.FC = () => {
     }
   };
 
+  /** Build the full public URL and copy it to the user's clipboard. */
   const copyPublicLink = () => {
     const url = `${window.location.origin}/public/${publicLink}`;
     navigator.clipboard.writeText(url);

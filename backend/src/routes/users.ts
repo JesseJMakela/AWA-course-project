@@ -4,7 +4,7 @@ import { authenticateUser, AuthRequest } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// GET /api/users/search?q=email - Search users by email
+// GET /api/users/search?q= — case-insensitive partial email search, max 10 results
 router.get('/search', authenticateUser, async (req: AuthRequest, res: Response) => {
   try {
     const { q } = req.query;
@@ -13,7 +13,6 @@ router.get('/search', authenticateUser, async (req: AuthRequest, res: Response) 
       return res.status(400).json({ error: 'Search query is required' });
     }
 
-    // Search for users by email (excluding passwords)
     const users = await User.find({
       email: { $regex: q, $options: 'i' }
     })

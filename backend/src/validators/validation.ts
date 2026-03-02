@@ -35,7 +35,7 @@ export const documentValidation = [
     .withMessage('Title is required')
 ];
 
-// Middleware that checks validation results and returns 400 if any rule failed
+// Checks validation results and returns 400 with error details if any rule failed
 export const validate = (req: Request, res: Response, next: NextFunction) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {

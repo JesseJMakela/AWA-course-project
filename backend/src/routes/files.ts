@@ -1,3 +1,5 @@
+// File upload routes for drive images and user avatars.
+// Multer handles multipart/form-data; only metadata is stored in MongoDB.
 import express, { Response } from 'express';
 import multer from 'multer';
 import path from 'path';
@@ -8,7 +10,7 @@ import User from '../models/User.js';
 
 const router = express.Router();
 
-// --- Multer config for drive images ---
+// Multer config for drive images (max 10 MB, images only)
 const imageStorage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     const dir = path.resolve('uploads/images');
@@ -16,6 +18,7 @@ const imageStorage = multer.diskStorage({
     cb(null, dir);
   },
   filename: (_req, file, cb) => {
+    // timestamp + random number to avoid filename collisions
     const unique = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     cb(null, unique + path.extname(file.originalname));
   }
@@ -33,7 +36,7 @@ const imageUpload = multer({
   }
 });
 
-// --- Multer config for avatars ---
+// Multer config for avatars (max 5 MB, images only)
 const avatarStorage = multer.diskStorage({
   destination: (_req, _file, cb) => {
     const dir = path.resolve('uploads/avatars');
@@ -112,7 +115,7 @@ router.get('/images', authenticateUser, async (req: AuthRequest, res: Response) 
   }
 });
 
-// DELETE /api/files/images/:id - Delete a drive image
+// DELETE /api/files/images/:id - Delete a drive image (removes file from disk too)
 router.delete('/images/:id', authenticateUser, async (req: AuthRequest, res: Response) => {
   try {
     const image = await DriveImage.findOne({ _id: req.params.id, owner: req.user!._id });
@@ -128,7 +131,7 @@ router.delete('/images/:id', authenticateUser, async (req: AuthRequest, res: Res
   }
 });
 
-// POST /api/files/avatar - Upload / update profile picture
+// POST /api/files/avatar - Upload or replace the user's profile picture
 router.post('/avatar', authenticateUser, avatarUpload.single('avatar'), async (req: AuthRequest, res: Response) => {
   try {
     if (!req.file) {
@@ -138,7 +141,7 @@ router.post('/avatar', authenticateUser, avatarUpload.single('avatar'), async (r
     const user = await User.findById(req.user!._id);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
-    // Delete old avatar file if it exists
+    // Delete the old avatar file from disk before saving the new one
     if (user.avatar) {
       const oldPath = path.resolve('uploads/avatars', path.basename(user.avatar));
       if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
@@ -155,7 +158,7 @@ router.post('/avatar', authenticateUser, avatarUpload.single('avatar'), async (r
   }
 });
 
-// DELETE /api/files/avatar - Remove profile picture
+// DELETE /api/files/avatar - Remove the user's profile picture
 router.delete('/avatar', authenticateUser, async (req: AuthRequest, res: Response) => {
   try {
     const user = await User.findById(req.user!._id);

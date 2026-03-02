@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
+// Extends Express Request with the decoded JWT payload
 export interface AuthRequest extends Request {
   user?: {
     _id: string;
@@ -9,7 +10,7 @@ export interface AuthRequest extends Request {
   };
 }
 
-// Middleware to validate JWT token for authenticated users
+// Blocks the request if no valid Bearer token is present
 export const authenticateUser = (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
@@ -38,7 +39,8 @@ export const authenticateUser = (req: AuthRequest, res: Response, next: NextFunc
   }
 };
 
-// Optional authentication - doesn't fail if no token
+// Same as authenticateUser but never rejects — used for routes accessible by both
+// authenticated users and anonymous visitors (e.g. public document view)
 export const optionalAuth = (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const authHeader = req.headers.authorization;
@@ -58,7 +60,7 @@ export const optionalAuth = (req: AuthRequest, res: Response, next: NextFunction
     }
     next();
   } catch {
-    // Silently continue without authentication
+    // Invalid token is silently ignored; anonymous access continues
     next();
   }
 };

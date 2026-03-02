@@ -1,4 +1,4 @@
-// Dashboard page — shows the user's documents and images, allows creating/deleting and uploading
+// Dashboard — documents and images tabs, plus avatar management
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -55,6 +55,7 @@ const Dashboard: React.FC = () => {
 
   const fetchDocuments = async () => {
     try {
+      // GET /api/documents returns all documents the user owns or has been given access to
       const response = await documentAPI.getAll();
       setDocuments(response.data.documents);
     } catch {
@@ -66,13 +67,15 @@ const Dashboard: React.FC = () => {
 
   const fetchImages = async () => {
     try {
+      // GET /api/files/images returns metadata for all drive images owned by the user
       const response = await fileAPI.getImages();
       setImages(response.data.images);
     } catch {
-      // non-critical
+      // Failure to load images is non-critical; the documents tab still works
     }
   };
 
+  /** Create a new document with the given title and close the modal on success. */
   const handleCreateDocument = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDocTitle.trim()) return;
@@ -86,6 +89,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  /** Delete a document after asking for confirmation (owner-only action). */
   const handleDeleteDocument = async (id: string) => {
     if (!confirm('Are you sure you want to delete this document?')) return;
     try {
@@ -96,6 +100,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  /** Upload an image file to the user's drive and refresh the images list. */
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -115,14 +120,18 @@ const Dashboard: React.FC = () => {
   const handleDeleteImage = async (id: string) => {
     if (!confirm('Delete this image?')) return;
     try {
+      // Remove metadata from the database and the physical file from disk
       await fileAPI.deleteImage(id);
+      // Update local state immediately so the UI does not wait for a re-fetch
       setImages(prev => prev.filter(img => img._id !== id));
+      // Close the preview modal if it was showing the deleted image
       if (previewImage?._id === id) setPreviewImage(null);
     } catch (err: unknown) {
       setError(getApiError(err, 'Failed to delete image'));
     }
   };
 
+  /** Upload a new profile picture and refresh the user object in global state. */
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -141,6 +150,7 @@ const Dashboard: React.FC = () => {
 
   const handleRemoveAvatar = async () => {
     try {
+      // Delete the avatar file from disk and clear the field in the database
       await fileAPI.deleteAvatar();
       await refreshUser();
       setShowAvatarModal(false);
@@ -149,12 +159,14 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  /** Format an ISO date string into a localised date-time string for display. */
   const formatDate = (date: string) =>
     new Date(date).toLocaleDateString('fi-FI', {
       year: 'numeric', month: 'short', day: 'numeric',
       hour: '2-digit', minute: '2-digit'
     });
 
+  /** Convert a raw byte count into a human-readable string (B / KB / MB). */
   const formatSize = (bytes: number) => {
     if (bytes < 1024) return `${bytes} B`;
     if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;

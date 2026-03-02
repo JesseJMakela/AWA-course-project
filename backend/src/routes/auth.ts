@@ -1,3 +1,5 @@
+// Authentication routes: register, login, and current-user retrieval.
+// Passwords are hashed with bcrypt; successful auth returns a signed JWT.
 import express, { Request, Response } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';

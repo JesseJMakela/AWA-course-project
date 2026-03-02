@@ -1,3 +1,4 @@
+// Read-only view for documents shared via a public link — no authentication required
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { documentAPI, getApiError } from '../api/client';
