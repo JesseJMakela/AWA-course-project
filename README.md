@@ -17,31 +17,27 @@ A web-based document management system where users can create, edit and share te
 - Node.js v18 or higher
 - MongoDB installed and running
 
-### 1. Start MongoDB
+### First time setup
+
+Install dependencies for both backend and frontend:
 
 ```bash
-sudo systemctl start mongodb
+cd backend && npm install && cd ../frontend && npm install && cd ..
 ```
 
-### 2. Start the backend
+### Running the app
 
 ```bash
-cd backend
-npm install
-npm run dev
+./run.sh
 ```
 
-The API runs on `http://localhost:3001`.
+This starts MongoDB, the backend (port 3001) and the frontend (port 5173) automatically.
 
-### 3. Start the frontend
+To stop everything:
 
 ```bash
-cd frontend
-npm install
-npm run dev
+./stop.sh
 ```
-
-The app opens at `http://localhost:5173`.
 
 ---
 
