@@ -37,11 +37,13 @@ router.get('/', authenticateUser, async (req: AuthRequest, res: Response) => {
     // Add permission info for each document
     const documentsWithPermissions = documents.map(doc => {
       const docObj = doc.toObject();
+      const owner = doc.owner as unknown as PopulatedUser;
+      const editPerms = doc.editPermissions as unknown as PopulatedUser[];
       return {
         ...docObj,
-        isOwner: doc.owner._id.toString() === userId,
-        canEdit: doc.owner._id.toString() === userId || 
-                 doc.editPermissions.some((u: PopulatedUser) => u._id.toString() === userId),
+        isOwner: owner._id.toString() === userId,
+        canEdit: owner._id.toString() === userId || 
+                 editPerms.some(u => u._id.toString() === userId),
         canView: true
       };
     });
@@ -100,13 +102,12 @@ router.get('/:id', optionalAuth, async (req: AuthRequest, res: Response) => {
     }
 
     // Check permissions
-    const isOwner = userId && document.owner._id.toString() === userId;
-    const hasEditPermission = userId && document.editPermissions.some((u: PopulatedUser) => 
-      u._id.toString() === userId
-    );
-    const hasViewPermission = userId && document.viewPermissions.some((u: PopulatedUser) => 
-      u._id.toString() === userId
-    );
+    const owner = document.owner as unknown as PopulatedUser;
+    const isOwner = userId && owner._id.toString() === userId;
+    const editPerms = document.editPermissions as unknown as PopulatedUser[];
+    const viewPerms = document.viewPermissions as unknown as PopulatedUser[];
+    const hasEditPermission = userId && editPerms.some(u => u._id.toString() === userId);
+    const hasViewPermission = userId && viewPerms.some(u => u._id.toString() === userId);
 
     // Allow access if: owner, has permissions, or document is public
     if (!isOwner && !hasEditPermission && !hasViewPermission && !document.isPublic) {
