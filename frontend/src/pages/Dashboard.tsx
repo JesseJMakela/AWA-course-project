@@ -1,3 +1,4 @@
+// Dashboard page — shows the user's documents and allows creating/deleting them
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -26,10 +27,12 @@ const Dashboard: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
+  // Load documents when the component mounts
   useEffect(() => {
     fetchDocuments();
   }, []);
 
+  // Fetch all documents the current user can access
   const fetchDocuments = async () => {
     try {
       const response = await documentAPI.getAll();
@@ -42,6 +45,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Create a new document and refresh the list
   const handleCreateDocument = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newDocTitle.trim()) return;
@@ -56,6 +60,7 @@ const Dashboard: React.FC = () => {
     }
   };
 
+  // Delete a document after confirmation
   const handleDeleteDocument = async (id: string) => {
     if (!confirm('Are you sure you want to delete this document?')) return;
 
