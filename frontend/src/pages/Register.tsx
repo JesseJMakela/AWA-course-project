@@ -20,7 +20,12 @@ const Register: React.FC = () => {
       await register(email, password, username);
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.error || err.response?.data?.errors?.[0]?.msg || 'Registration failed');
+      const data = err.response?.data;
+      if (data?.errors && Array.isArray(data.errors)) {
+        setError(data.errors.map((e: any) => e.msg).join(' · '));
+      } else {
+        setError(data?.error || 'Registration failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -48,6 +53,7 @@ const Register: React.FC = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               placeholder="Your name"
             />
+            <p className="mt-1 text-sm text-gray-500">At least 3 characters</p>
           </div>
 
           <div>
@@ -63,6 +69,7 @@ const Register: React.FC = () => {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
               placeholder="your@email.com"
             />
+            <p className="mt-1 text-sm text-gray-500">Must be a valid email address</p>
           </div>
 
           <div>

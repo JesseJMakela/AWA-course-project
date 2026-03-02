@@ -2,9 +2,14 @@ import express, { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import authRoutes from './src/routes/auth.js';
 import documentRoutes from './src/routes/documents.js';
 import userRoutes from './src/routes/users.js';
+import fileRoutes from './src/routes/files.js';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Load environment variables
 dotenv.config();
@@ -23,10 +28,17 @@ mongoose.connect(MONGODB_URI)
 
 // Middleware
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:5173',
+    'http://127.0.0.1:5173'
+  ],
   credentials: true
 }));
 app.use(express.json());
+
+// Serve uploaded files statically
+app.use('/static/images', express.static(path.join(__dirname, 'uploads/images')));
+app.use('/static/avatars', express.static(path.join(__dirname, 'uploads/avatars')));
 
 // Request logging
 app.use((req, res, next) => {
@@ -38,6 +50,7 @@ app.use((req, res, next) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/documents', documentRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/files', fileRoutes);
 
 // Health check
 app.get('/health', (req: Request, res: Response) => {

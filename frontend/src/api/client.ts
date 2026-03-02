@@ -65,4 +65,24 @@ export const userAPI = {
   search: (query: string) => api.get(`/users/search?q=${encodeURIComponent(query)}`),
 };
 
+// File APIs
+export const fileAPI = {
+  // Drive images
+  uploadImage: (file: File) => {
+    const form = new FormData();
+    form.append('image', file);
+    return api.post('/files/images', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
+  getImages: () => api.get('/files/images'),
+  deleteImage: (id: string) => api.delete(`/files/images/${id}`),
+
+  // Avatar
+  uploadAvatar: (file: File) => {
+    const form = new FormData();
+    form.append('avatar', file);
+    return api.post('/files/avatar', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
+  deleteAvatar: () => api.delete('/files/avatar'),
+};
+
 export default api;

@@ -136,7 +136,7 @@ router.get('/me', async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'User not found' });
     }
 
-    res.json({ user });
+    res.json({ user: { ...user.toObject(), password: undefined } });
   } catch (error) {
     res.status(401).json({ error: 'Invalid token' });
   }

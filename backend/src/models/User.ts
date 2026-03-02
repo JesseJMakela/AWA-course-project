@@ -4,6 +4,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   username: string;
+  avatar?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -24,6 +25,10 @@ const UserSchema: Schema = new Schema({
     type: String,
     required: true,
     trim: true
+  },
+  avatar: {
+    type: String,
+    default: undefined
   }
 }, {
   timestamps: true

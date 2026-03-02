@@ -7,6 +7,7 @@ interface User {
   _id: string;
   email: string;
   username: string;
+  avatar?: string;
 }
 
 interface AuthContextType {
@@ -16,6 +17,7 @@ interface AuthContextType {
   register: (email: string, password: string, username: string) => Promise<void>;
   logout: () => void;
   loading: boolean;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -71,8 +73,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setUser(null);
   };
 
+  // Re-fetch current user (e.g. after avatar change)
+  const refreshUser = async () => {
+    try {
+      const response = await authAPI.getMe();
+      setUser(response.data.user);
+    } catch {
+      // ignore
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ user, token, login, register, logout, loading, refreshUser }}>
       {children}
     </AuthContext.Provider>
   );
