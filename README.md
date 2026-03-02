@@ -9,6 +9,8 @@ A web-based document management system where users can create, edit and share te
 - Share documents with other registered users (view or edit permission)
 - Generate a public link so anyone (without an account) can read a document
 - Only one person can edit a document at a time — others see a warning
+- Upload images to your personal drive and view or delete them
+- Upload a profile avatar visible on your dashboard
 
 ## Installation
 
@@ -72,6 +74,18 @@ To stop everything:
 1. Open a document you own
 2. Scroll to **Public Link** and click **Generate Public Link**
 3. Copy the link and share it — anyone can read the document without an account
+
+### Upload images to your drive
+
+1. Go to the **Images** tab on the dashboard
+2. Click **Upload Image** and select a file (max 10 MB, images only)
+3. Uploaded images are listed with their filename and a delete button
+
+### Change your profile picture
+
+1. On the dashboard, click the avatar area at the top
+2. Select an image file (max 5 MB)
+3. The new avatar is saved and shown immediately
 
 ### Troubleshooting
 
